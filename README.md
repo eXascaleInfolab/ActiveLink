@@ -1,6 +1,6 @@
 # ActiveLink
 
-##Dataset
+## Dataset
 `data/<dataset_name>`
 
 Each dataset contains 3 files: `train.txt`, `test.txt` and `valid.txt`
@@ -29,7 +29,7 @@ This step generates 6 files:
 * Mapping from entity/relation label to id
 
 
-####Embeddings
+#### Embeddings
 For clustering entities (Structured Uncertainty sampling, see Section 3.2 of the paper for more details) we need to train their embeddings beforehand. We used [TransE model](https://github.com/thunlp/KB2E/tree/master/TransE) with the following parameters:
 * method: bern
 * embedding size: 100
@@ -89,12 +89,16 @@ where MR is a mean rank after the current training epoch, and MR_opt is the best
 #### Evaluation Rate
 Since active learning use a small fraction of a dataset at each iteration, the overall number of training epochs is much bigger for active learning setup compared to a traditional supervised approach (in fact one iteration of active learning is comparable to the full training cycle of non-active learning in terms of the number of training epochs).
 For time efficiency we do not evaluate model performance after each training epoch but rather after each _<eval-rate>_ epochs.
+  
+#### Important Note
+The library requires pytorch version 0.3.1.
+For newer versions some migration updates needed. 
 
-##References
+## References
 For the full method description and experimental results please refer to our paper: 
 
 Natalia Ostapuk, Jie Yang, and Philippe Cudre-Mauroux. “ActiveLink: Deep Active Learning for Link Prediction in Knowledge Graphs.” In Proceedings of the Web Conference (WWW 2019), 2019 [PDF](https://exascale.info/assets/pdf/ostapuk2019www.pdf)
 
 
-##Acknowledgement
+## Acknowledgement
 The model architecture as well as some valuable pieces of code are borrowed from this project: https://github.com/TimDettmers/ConvE 
