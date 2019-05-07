@@ -30,15 +30,15 @@ This step generates 6 files:
 
 
 #### Embeddings
-For clustering entities (Structured Uncertainty sampling, see Section 3.2 of the paper for more details) we need to train their embeddings beforehand. We used [TransE model](https://github.com/thunlp/KB2E/tree/master/TransE) with the following parameters:
+For clustering entities (Structured Uncertainty sampling, see Section 3.2 of the paper for more details) we need to train their embeddings beforehand. We used the [TransE model](https://github.com/thunlp/KB2E/tree/master/TransE) with the following parameters:
 * method: bern
 * embedding size: 100
 * learning rate: 0.001
 * margin: 1 
 
-Details on TransE model: *Yankai Lin, Zhiyuan Liu, Maosong Sun, Yang Liu, Xuan Zhu. Learning Entity and Relation Embeddings for Knowledge Graph Completion. The 29th AAAI Conference on Artificial Intelligence (AAAI'15)* 
+Details on TransE: *Yankai Lin, Zhiyuan Liu, Maosong Sun, Yang Liu, Xuan Zhu. Learning Entity and Relation Embeddings for Knowledge Graph Completion. The 29th AAAI Conference on Artificial Intelligence (AAAI'15)* 
 
-**NB** TransE requires mapping from entity/relation label to id. Use `entity2id.txt` and `relation2id.txt` files generated at the preprocessing step. 
+**NB** TransE requires mapping from entity/relation label to id. Use the `entity2id.txt` and `relation2id.txt` files generated at the preprocessing step. 
 
 ## Running a model
 #### Parameters
@@ -75,7 +75,7 @@ You can configure your run via command line arguments:
     --window-size
         size of the window for meta-incremental training
         
-To reproduce paper results for FB15k-237:
+To reproduce the paper results for FB15k-237:
 `python main.py --dataset FB15k-237 --model ConvE` (all the other parameters have right default values)
 
 #### Early Stopping
@@ -87,12 +87,12 @@ As a trigger we use the following formula:
 where MR is a mean rank after the current training epoch, and MR_opt is the best mean rank achieved on the previous training epochs within the same active learning iteration.
 
 #### Evaluation Rate
-Since active learning use a small fraction of a dataset at each iteration, the overall number of training epochs is much bigger for active learning setup compared to a traditional supervised approach (in fact one iteration of active learning is comparable to the full training cycle of non-active learning in terms of the number of training epochs).
-For time efficiency we do not evaluate model performance after each training epoch but rather after each _<eval-rate>_ epochs.
+Since active learning use a small fraction of a dataset at each iteration, the overall number of training epochs is much bigger for the active learning setup compared to a traditional supervised approach (in fact one iteration of active learning is comparable to the full training cycle of non-active learning in terms of the number of training epochs).
+For time efficiency we do not evaluate model performance after each epoch but rather after each _<eval-rate>_ epochs.
   
 #### Important Note
 The library requires pytorch version 0.3.1.
-For newer versions some migration updates needed. 
+For newer versions some migration updates might be needed. 
 
 ## References
 For the full method description and experimental results please refer to our paper: 
