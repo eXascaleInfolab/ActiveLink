@@ -78,6 +78,11 @@ class DataStreamer(object):
         return ent_rel_dict
 
     def tokens_to_ids(self, triple):
+        '''
+        Match entities and relations in json to id
+        :param triple:
+        :return: dict, key: id_value
+        '''
         entity_keys = {"e1", "e2"}
         multi_entity_keys = {"e2_multi1", "e2_multi2"}
         relation_keys = {"rel", "rel_eval"}
@@ -372,6 +377,10 @@ class DataSampleStreamer(DataStreamer):
         log.info("Clustering: finished")
 
     def do_clusterize(self):
+        '''
+        Do clustering with K-means
+        :return: dict, (entity_id): cluster_id
+        '''
         if not os.path.exists(self.entity_embed_path):
             raise Exception("Entities embedding file is missing")
 
@@ -382,7 +391,8 @@ class DataSampleStreamer(DataStreamer):
         labels_lst = kmeans.labels_.tolist()
 
         for entity_id, cluster_id in enumerate(labels_lst):
-            labels[entity_id] = cluster_id
+            labels[entity_id+1] = cluster_id
+        log.info("Clustering training: completed")
         return labels
 
     def count_uncertainty(self, pred):
