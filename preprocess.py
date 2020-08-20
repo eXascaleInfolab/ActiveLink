@@ -106,11 +106,11 @@ def assign_ids(graph, entity2id_path, rel2id_path):
 
     with open(entity2id_path, "w") as fout:
         for i, ent in enumerate(entities):
-            fout.write("{}\t{}\n".format(ent, i + 1))  # id == 0 is a bad idea
+            fout.write("{}\t{}\n".format(ent, i))  # id == 0 is a bad idea
 
     with open(rel2id_path, "w") as fout:
         for i, rel in enumerate(relations):
-            fout.write("{}\t{}\n".format(rel, i + 1))
+            fout.write("{}\t{}\n".format(rel, i))
 
 
 write_training_graph(train_graph['train.txt'], 'data/{0}/e1rel_to_e2_train.json'.format(dataset_name))
