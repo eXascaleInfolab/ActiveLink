@@ -14,6 +14,7 @@ def ranking_and_hits(model, dev_rank_batcher, batch_size, name, silent=False):
     log.info(name)
     log.info('-' * 50)
     log.info('')
+
     hits_left = []
     hits_right = []
     hits = []
@@ -67,8 +68,8 @@ def ranking_and_hits(model, dev_rank_batcher, batch_size, name, silent=False):
         argsort2 = argsort2.cpu().numpy()
         for i in range(batch_size):
             # find the rank of the target entities
-            rank1 = np.where(argsort1[i]==e2[i, 0])[0][0]
-            rank2 = np.where(argsort2[i]==e1[i, 0])[0][0]
+            rank1 = np.where(argsort1[i] == e2.data.cpu().numpy()[i])[0]
+            rank2 = np.where(argsort2[i] == e1.data.cpu().numpy()[i])[0]
             # rank+1, since the lowest rank is rank 1 not rank 0
             ranks.append(rank1+1)
             ranks_left.append(rank1+1)
