@@ -69,14 +69,13 @@ class DataStreamer(object):
 
     def preprocess(self, triples):
         ent_rel_dict = defaultdict(list)
-
         # list of dicts -> dict of lists
         for triple in triples:
             for key, value in triple.items():
                 if not isinstance(value, list):
                     new_value = [value]
                 else:
-                    new_value = value + ([-1] * (self.multi_key_length[key.encode("utf8")] - len(value)))  # fill in missing values in 2nd dimension
+                    new_value = value + ([-1] * (self.multi_key_length[key] - len(value)))  # fill in missing values in 2nd dimension
                 ent_rel_dict[key].append(new_value)
 
         # list -> numpy.array
@@ -121,17 +120,17 @@ class DataStreamer(object):
                 batch[key + "_binary"] = new_value
 
     def torch_convertor(self, batch):
-        for key, value in batch.iteritems():
+        for key, value in batch.items():
             batch[key] = Variable(torch.from_numpy(value), volatile=False)
 
     def torch_cuda_convertor(self, batch):
-        for key, value in batch.iteritems():
+        for key, value in batch.items():
             batch[key] = value.cuda(self.device_id, True)
 
     def __iter__(self):
         return self
 
-    def __next__(self):
+    def next(self):
         start_index = self.batch_idx * self.batch_size
         if self.use_all_data:
             end_index = min((self.batch_idx + 1) * self.batch_size, self.dataset_size)
@@ -143,7 +142,7 @@ class DataStreamer(object):
             current_batch = self.preprocess(self.data[start_index:end_index])
             self.binary_convertor(current_batch)
             self.torch_convertor(current_batch)
-            # self.torch_cuda_convertor(current_batch)
+            self.torch_cuda_convertor(current_batch)   # convert tensor to cuda
             return current_batch
         else:
             self.batch_idx = 0
