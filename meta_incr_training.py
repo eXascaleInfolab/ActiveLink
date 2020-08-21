@@ -61,9 +61,9 @@ def perform_meta_update(config, val_batcher, model, grads, opt):
     log.info("Perform meta update")
 
     try:
-        str2var = val_batcher.next()
+        str2var = val_batcher.__next__()
     except StopIteration:
-        str2var = val_batcher.next()
+        str2var = val_batcher.__next__()
     e1 = str2var["e1"]
     rel = str2var["rel"]
     e2_multi = str2var["e2_multi1_binary"].float()
@@ -108,15 +108,20 @@ def perform_meta_update(config, val_batcher, model, grads, opt):
 
 
 def run_inner(config, model, task):
+    '''
+    '''
     try:
-        str2var = task.next()
+        str2var = task.__next__()
     except:
-        str2var = task.next()
+        str2var = task.__next__()
     e1 = str2var["e1"]
     rel = str2var["rel"]
     e2_multi = str2var["e2_multi1_binary"].float()
     e2_multi = ((1.0 - config.label_smoothing_epsilon) * e2_multi) + (1.0 / e2_multi.size(1))
 
+    torch.save(model, "debug_model.model")
+    torch.save(e1.cpu().detach().numpy(), "e1.pt")
+    torch.save(rel.cpu().detach().numpy(), "rel.pt")
     pred = model.forward(e1, rel)
     loss = model.loss(pred, e2_multi)
     grads = torch.autograd.grad(loss, model.parameters(), create_graph=True)
@@ -129,15 +134,18 @@ def run_inner(config, model, task):
 
     # Compute the meta gradient and return it
     try:
-        str2var_val = task.next()
+        str2var_val = task.__next__()
     except:
-        str2var_val = task.next()
+        str2var_val = task.__next__()
     meta_grads = perform_task_meta_update(config, str2var_val, model, updated_params)
 
     return meta_grads
 
 
 def run_meta_incremental(config, model, train_batcher, test_rank_batcher):
+    '''
+    meta incremental training
+    '''
     opt = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
 
     mr_opt = float('inf')
