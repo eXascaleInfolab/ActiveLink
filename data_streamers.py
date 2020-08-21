@@ -130,7 +130,7 @@ class DataStreamer(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         start_index = self.batch_idx * self.batch_size
         if self.use_all_data:
             end_index = min((self.batch_idx + 1) * self.batch_size, self.dataset_size)
@@ -147,6 +147,24 @@ class DataStreamer(object):
         else:
             self.batch_idx = 0
             raise StopIteration
+
+    # def next(self):
+    #     start_index = self.batch_idx * self.batch_size
+    #     if self.use_all_data:
+    #         end_index = min((self.batch_idx + 1) * self.batch_size, self.dataset_size)
+    #     else:
+    #         end_index = (self.batch_idx + 1) * self.batch_size
+    #
+    #     if start_index < end_index and end_index <= self.dataset_size:
+    #         self.batch_idx += 1
+    #         current_batch = self.preprocess(self.data[start_index:end_index])
+    #         self.binary_convertor(current_batch)
+    #         self.torch_convertor(current_batch)
+    #         self.torch_cuda_convertor(current_batch)   # convert tensor to cuda
+    #         return current_batch
+    #     else:
+    #         self.batch_idx = 0
+    #         raise StopIteration
 
 
 class DataSampleStreamer(DataStreamer):
@@ -393,7 +411,7 @@ class DataSampleStreamer(DataStreamer):
         labels_lst = kmeans.labels_.tolist()
 
         for entity_id, cluster_id in enumerate(labels_lst):
-            labels[entity_id+1] = cluster_id # index should matches with starting point 1
+            labels[entity_id] = cluster_id
         return labels
 
     def count_uncertainty(self, pred):
@@ -491,5 +509,14 @@ class DataTaskStreamer(DataSampleStreamer):
         else:
             self.task_idx = -1
             raise StopIteration
+
+    # def next(self):
+    #     if self.task_idx * (-1) <= len(self.tasks) and self.task_idx * (-1) <= self.window_size:
+    #         current_task = self.tasks[self.task_idx]
+    #         self.task_idx -= 1
+    #         return current_task
+    #     else:
+    #         self.task_idx = -1
+    #         raise StopIteration
 
 
