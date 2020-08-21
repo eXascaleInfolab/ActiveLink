@@ -17,6 +17,8 @@ base_path = 'data/{0}/'.format(dataset_name)
 files = ['train.txt', 'valid.txt', 'test.txt']
 
 data = []
+
+# read all triples from 3 files
 for p in files:
     with open(join(base_path, p)) as f:
         data = f.readlines() + data
@@ -61,6 +63,9 @@ for p in files:
 
 
 def write_training_graph(graph, path):
+    '''
+    Save the graph as json file
+    '''
     with open(path, 'w') as f:
         for i, key in enumerate(graph):
             e1, rel = key
@@ -106,7 +111,7 @@ def assign_ids(graph, entity2id_path, rel2id_path):
 
     with open(entity2id_path, "w") as fout:
         for i, ent in enumerate(entities):
-            fout.write("{}\t{}\n".format(ent, i))  # id == 0 is a bad idea
+            fout.write("{}\t{}\n".format(ent, i))
 
     with open(rel2id_path, "w") as fout:
         for i, rel in enumerate(relations):
