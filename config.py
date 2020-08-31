@@ -41,7 +41,7 @@ class Config(object):
     optimizer = 'adam'
 
     def __init__(self, args):
-        for name, value in vars(args).iteritems():
+        for name, value in vars(args).items():
             if value is not None:
                 setattr(self, name, value)
                 log.info('Set parameter %s to %s', name, value)

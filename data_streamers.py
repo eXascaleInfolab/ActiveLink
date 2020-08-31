@@ -15,6 +15,9 @@ from torch.nn import functional as F
 log = logging.getLogger()
 
 class DataStreamer(object):
+    '''
+
+    '''
     def __init__(self, entity2id, rel2id, batch_size, use_all_data=False):
         self.binary_keys = {"e2_multi1"}
         self.multi_entity_keys = {"e2_multi1", "e2_multi2"}
@@ -32,6 +35,11 @@ class DataStreamer(object):
         self.num_entities = len(entity2id)
 
     def init_from_path(self, path):
+        '''
+        Read json file from the path and save triples in id
+        :param path:
+        :return:
+        '''
         triples = []
 
         with open(path) as f:
@@ -61,30 +69,32 @@ class DataStreamer(object):
 
     def preprocess(self, triples):
         ent_rel_dict = defaultdict(list)
-
         # list of dicts -> dict of lists
         for triple in triples:
-            for key, value in triple.iteritems():
+            for key, value in triple.items():
                 if not isinstance(value, list):
                     new_value = [value]
                 else:
-                    new_value = value + ([-1] * (self.multi_key_length[key.encode("utf8")] - len(value)))  # fill in missing values in 2nd dimension
+                    new_value = value + ([-1] * (self.multi_key_length[key] - len(value)))  # fill in missing values in 2nd dimension
                 ent_rel_dict[key].append(new_value)
 
         # list -> numpy.array
-        for key, value in ent_rel_dict.iteritems():
+        for key, value in ent_rel_dict.items():
             ent_rel_dict[key] = np.array(value, dtype=np.int64)
 
         return ent_rel_dict
 
     def tokens_to_ids(self, triple):
+        '''
+        match tokens with id
+        '''
         entity_keys = {"e1", "e2"}
         multi_entity_keys = {"e2_multi1", "e2_multi2"}
         relation_keys = {"rel", "rel_eval"}
 
         res = {}
 
-        for key, value in triple.iteritems():
+        for key, value in triple.items():
             if value == "None":
                 continue
             if key in entity_keys:
@@ -110,17 +120,17 @@ class DataStreamer(object):
                 batch[key + "_binary"] = new_value
 
     def torch_convertor(self, batch):
-        for key, value in batch.iteritems():
+        for key, value in batch.items():
             batch[key] = Variable(torch.from_numpy(value), volatile=False)
 
     def torch_cuda_convertor(self, batch):
-        for key, value in batch.iteritems():
+        for key, value in batch.items():
             batch[key] = value.cuda(self.device_id, True)
 
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         start_index = self.batch_idx * self.batch_size
         if self.use_all_data:
             end_index = min((self.batch_idx + 1) * self.batch_size, self.dataset_size)
@@ -132,11 +142,29 @@ class DataStreamer(object):
             current_batch = self.preprocess(self.data[start_index:end_index])
             self.binary_convertor(current_batch)
             self.torch_convertor(current_batch)
-            self.torch_cuda_convertor(current_batch)
+            self.torch_cuda_convertor(current_batch)   # convert tensor to cuda
             return current_batch
         else:
             self.batch_idx = 0
             raise StopIteration
+
+    # def next(self):
+    #     start_index = self.batch_idx * self.batch_size
+    #     if self.use_all_data:
+    #         end_index = min((self.batch_idx + 1) * self.batch_size, self.dataset_size)
+    #     else:
+    #         end_index = (self.batch_idx + 1) * self.batch_size
+    #
+    #     if start_index < end_index and end_index <= self.dataset_size:
+    #         self.batch_idx += 1
+    #         current_batch = self.preprocess(self.data[start_index:end_index])
+    #         self.binary_convertor(current_batch)
+    #         self.torch_convertor(current_batch)
+    #         self.torch_cuda_convertor(current_batch)   # convert tensor to cuda
+    #         return current_batch
+    #     else:
+    #         self.batch_idx = 0
+    #         raise StopIteration
 
 
 class DataSampleStreamer(DataStreamer):
@@ -198,7 +226,7 @@ class DataSampleStreamer(DataStreamer):
 
         stop_sampling = False
 
-        for cluster_id, cluster_data in self.clusters.iteritems():
+        for cluster_id, cluster_data in self.clusters.items():
             if stop_sampling:
                 end_index = 0
             else:
@@ -259,7 +287,7 @@ class DataSampleStreamer(DataStreamer):
         for i, str2var in enumerate(remaining_data_streamer):
             current_batch_size = len(str2var["e1"])
 
-            # init prediciton tensor
+            # init prediction tensor
             pred = torch.cuda.FloatTensor(10, current_batch_size, self.num_entities)
 
             for j in range(10):
@@ -283,7 +311,7 @@ class DataSampleStreamer(DataStreamer):
         current_sample = []
         all_clusters_size = sum(len(v) for v in self.clusters.values())
 
-        for cluster_id, cluster_data in self.clusters.iteritems():
+        for cluster_id, cluster_data in self.clusters.items():
             random.shuffle(cluster_data)
 
             current_cluster_ratio = float(len(cluster_data)) / all_clusters_size
@@ -310,7 +338,7 @@ class DataSampleStreamer(DataStreamer):
         all_clusters_size = sum(len(v) for v in self.clusters.values())
 
         model.train()  # activate dropouts
-        for cluster_id, cluster_data in self.clusters.iteritems():
+        for cluster_id, cluster_data in self.clusters.items():
             if len(cluster_data) % self.batch_size == 1:
                 batch_size = self.batch_size - 1  # we need this trick because batch_norm doesn't accept tensor of size 1
             else:
@@ -360,6 +388,7 @@ class DataSampleStreamer(DataStreamer):
         return current_sample
 
     def build_clusters(self, path):
+        '''Do clustering'''
         log.info("Clustering: started")
         entity2cluster = self.do_clusterize()  # {entity_id : cluster_id}
 
@@ -469,9 +498,10 @@ class DataTaskStreamer(DataSampleStreamer):
         log.info("Training sample size: {}".format(self.dataset_size))
 
     def __iter__(self):
+        ''' Return self because already defined the next() method (generator object) '''
         return self
 
-    def next(self):
+    def __next__(self):
         if self.task_idx * (-1) <= len(self.tasks) and self.task_idx * (-1) <= self.window_size:
             current_task = self.tasks[self.task_idx]
             self.task_idx -= 1
@@ -479,5 +509,14 @@ class DataTaskStreamer(DataSampleStreamer):
         else:
             self.task_idx = -1
             raise StopIteration
+
+    # def next(self):
+    #     if self.task_idx * (-1) <= len(self.tasks) and self.task_idx * (-1) <= self.window_size:
+    #         current_task = self.tasks[self.task_idx]
+    #         self.task_idx -= 1
+    #         return current_task
+    #     else:
+    #         self.task_idx = -1
+    #         raise StopIteration
 
 
